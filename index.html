@@ -1,0 +1,119 @@
+<!--  Holy shit. Fuck that's how you comment in HTML lol. So we've just on
+      the fly refactored this app. It's now a static SPA that we'll deploy on
+      Netlify. Was gonna so a server but realised, nahhhh.... anyways  -->
+
+<!--  Finished this initial version the next day (26/02/2019).
+      Just checked out Neef's UsTwo Adventure SPA git repo and holy shit.
+      That's how I take this to the next level -->
+
+<!--  So it's not 1AM on 04/03/2019. I continue to work on this laaate at night.
+      In order to get the live meditators counter we need to use socket.io. So,
+      we need a server lol. Meh, it's not too bad xD -->
+
+<!DOCTYPE html>
+  <html>
+    <head>
+      <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+      <title>Just sitting</title>
+
+      <style>
+        html { height: 100%; font-family: 'Montserrat', sans-serif; }
+
+        body {
+          background-image: linear-gradient(141deg, #9fb8ad 0%, #1fc8db 51%, #2cb5e8 75%);
+          color: white;
+          text-shadow: 2px 2px 4px #060606;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          text-align: center;
+        }
+
+        .header {
+          text-align: left;
+          position: fixed;
+          left: 0;
+          top: 0;
+          width: 100%;
+          padding: 10px;
+        }
+
+        .footer {
+          position: fixed;
+          left: 0;
+          bottom: 0;
+          width: 100%;
+          padding: 10px;
+        }
+      </style>
+    </head>
+
+    <body>
+      <div class="header">
+        <p id="count">0 sitting right now.</p>
+        <button id="love-button">❤️</button>
+        <button id="peace-button">✌️</button>
+      </div>
+
+      <div class="app">
+        <div style="display: flex; justify-content: center;">
+          <div>
+            <p id=sitter-space0>&nbsp;</p>
+            <span id="sitter0" style="font-size: 80px;">🧘</span>
+          </div>
+          <div>
+            <p id=sitter-space1>&nbsp;</p>
+            <span id="sitter1" style="font-size: 80px;">🧘🏻</span>
+          </div>
+          <div>
+            <p id=sitter-space2>&nbsp;</p>
+            <span id="sitter2" style="font-size: 80px;">‍🧘🏾</span>
+          </div>
+        </div>
+        <p id="question">
+          Welcome all,<br/>
+          feel free to sit an chill for as long as you want.<br/><br/>
+          Should you require some inspiration, some introspective questions will appear here soon...
+        </p>
+      </div>
+
+      <div class="footer">
+        An app made by <a href="https://www.github.com/sejori">sebringrose</a>
+      </div>
+
+      <script src="/socket.io/socket.io.js"></script>
+      <script>
+        var socket = io()
+
+        socket.on('question update', (question) => document.getElementById("question").innerHTML = question)
+        socket.on('count update', (count) => document.getElementById("count").innerHTML = count)
+
+        var sitterEmote = (sitter, emote) => {
+          document.getElementById(sitter).innerHTML = emote
+          setTimeout( () => {
+            document.getElementById(sitter).innerHTML = "&nbsp;"
+          }, 3000)
+        }
+
+        var loveButton = document.getElementById("love-button")
+        loveButton.addEventListener('click', event => socket.emit('love-button') )
+        socket.on('love-button', () => {
+          let number = Math.floor(Math.random() * 3)
+          if (number === 0) sitterEmote("sitter-space0", "❤️")
+          if (number === 1) sitterEmote("sitter-space1", "❤️")
+          if (number === 2) sitterEmote("sitter-space2", "❤️")
+        })
+
+        var peaceButton = document.getElementById("peace-button")
+        peaceButton.addEventListener('click', event => socket.emit('peace-button') )
+        socket.on('peace-button', () => {
+          let number = Math.floor(Math.random() * 3)
+          if (number === 0) sitterEmote("sitter-space0", "✌️")
+          if (number === 1) sitterEmote("sitter-space1", "✌️")
+          if (number === 2) sitterEmote("sitter-space2", "✌️")
+        })
+      </script>
+
+    </body>
+  </html>
