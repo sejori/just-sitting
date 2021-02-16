@@ -2,9 +2,8 @@ var app = require('express')()
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html') })
+app.get('*', (req, res) => { res.sendFile(__dirname + '/index.html') })
 
-var count = 0;
 var i = 0;
 var questions = [
   'what is/was your most proud achievement of today?',
@@ -15,6 +14,8 @@ var questions = [
   'are there any subtle joys surrounding you?',
   'what are you looking forward to?'
 ]
+var sitters = []
+var sitterOptions = ["🧘", "🧘🏽", "🧘🏿", "🧘‍♂️", "🧘🏻", "🧘‍♀️", "🧘🏾‍♀️", "🧘🏿‍♀️", "🧘🏻‍♂️", "🧘🏽‍♂️", "🧘🏽‍♀️", "🧘🏼", "🧘🏾‍♂️", "🧘🏼‍♀️", "🧘🏾", "🧘🏼‍♂️", "🧘🏿‍♂️", "🧘🏻‍♀️"]
 
 var interval = setInterval( () => {
   console.log('question ', i)
@@ -22,21 +23,29 @@ var interval = setInterval( () => {
   io.emit('question update', questions[i])
   if (i >= questions.length - 1) i = 0
   else i++
-}, 60000)
+}, 120000)
 
 io.on('connection', (socket) => {
   console.log('a user connected')
-  count += 1
-  io.emit('count update', count + " sitting right now.")
-
-  socket.on('love-button', () => io.emit('love-button') )
-  socket.on('peace-button', () => io.emit('peace-button') )
-  socket.on('disconnect', function(){
+  let sitter = "none"
+  
+  if (sitters.length < sitterOptions.length) {
+    sitter = sitterOptions[Math.round(Math.random()*sitterOptions.length-1)]
+    while (sitters.includes(sitter)) {
+      sitter = sitterOptions[Math.round(Math.random()*sitterOptions.length-1)]
+    }
+    sitters.push(sitter)
+  }
+  
+  io.emit('sitters', sitters)
+  socket.emit("sitter", sitter)
+  socket.on('love-button', (sitter) => io.emit('love-button', sitter))
+  socket.on('peace-button', (sitter) => io.emit('peace-button', sitter))
+  socket.on('disconnect', function(sitter){
     console.log('user disconnected')
-      count -= 1
-      io.emit('count update', count + " sitting right now.")
+    sitters.splice(sitters.indexOf(sitter), 1)
+    io.emit('sitters', sitters)
   });
-
 })
 
-http.listen(process.env.PORT || 3333, () => console.log(`Example app listening on port 3333!`))
+http.listen(process.env.PORT || 3333, () => console.log(`Example app listening on port ${process.env.PORT}!`))
