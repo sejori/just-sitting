@@ -1,80 +1,101 @@
-<!--  Holy shit. Fuck that's how you comment in HTML lol. So we've just on
-      the fly refactored this app. It's now a static SPA that we'll deploy on
-      Netlify. Was gonna so a server but realised, nahhhh.... anyways  -->
-
-<!--  Finished this initial version the next day (26/02/2019).
-      Just checked out Neef's UsTwo Adventure SPA git repo and holy shit.
-      That's how I take this to the next level -->
-
-<!--  So it's not 1AM on 04/03/2019. I continue to work on this laaate at night.
-      In order to get the live meditators counter we need to use socket.io. So,
-      we need a server lol. Meh, it's not too bad xD -->
-
 <!DOCTYPE html>
   <html>
     <head>
       <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
       <title>Just sitting</title>
-
+      <link rel="icon" 
+        type="image/png" 
+        href="https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fjust-sitting.png?v=1587314467138">
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
         html { height: 100%; font-family: 'Montserrat', sans-serif; }
-
         body {
-          background-image: linear-gradient(141deg, #9fb8ad 0%, #1fc8db 51%, #2cb5e8 75%);
+          background-image: linear-gradient(141deg, #92cded 0%, #1fc8db 51%, #2cb5e8 75%);
           color: white;
-          text-shadow: 2px 2px 4px #060606;
+          text-shadow: 1px 1px 3px #040404;
           height: 100%;
           display: flex;
           flex-direction: column;
           justify-content: center;
           text-align: center;
+          margin: 0;
+          padding: 1rem;
         }
-
+        button {
+          height: 40px;
+          border-radius: 5px;
+          border: none;
+          padding: 10px;
+          margin: 5px;
+          box-shadow: 1px 1px 2px #888;
+          background-color: white;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
         .header {
           text-align: left;
           position: fixed;
           left: 0;
           top: 0;
-          width: 100%;
-          padding: 10px;
+          display: flex;
+          justify-content: space-between;
+          width: 100%
         }
-
+        .header div {
+          display: flex;
+          padding: 15px;
+        }
         .footer {
           position: fixed;
           left: 0;
           bottom: 0;
           width: 100%;
           padding: 10px;
+          text-align: center;
+        }
+        .sitter {
+          font-size: 80px;
+        }
+        @media only screen and (max-width: 600px) {
+          .sitter {
+          font-size: 50px;
+        }
         }
       </style>
     </head>
 
     <body>
+      <audio id="audio" volume="0.5">
+        <source src="https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2FTemple%20Bell-SoundBible.com-756181215.mp3?v=1587732536317" type="audio/mpeg">
+      </audio>
+      
       <div class="header">
-        <p id="count">0 sitting right now.</p>
-        <button id="love-button">❤️</button>
-        <button id="peace-button">✌️</button>
+        <div>
+          <button id="love-button">❤️</button>
+          <button id="peace-button">✌️</button>
+        </div>
+        <div style="flex-direction: column">
+          <button onclick="toggleMuted()">
+            <span>Gong:&nbsp;</span>
+            <img id="mute-button" src="https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fsound-on.svg?v=1587733304416">
+          </button>
+          <p style="font-size: 8px">
+            (requires site audio enabled)
+          </p>
+        </div>
       </div>
 
       <div class="app">
-        <div style="display: flex; justify-content: center;">
-          <div>
-            <p id=sitter-space0>&nbsp;</p>
-            <span id="sitter0" style="font-size: 80px;">🧘</span>
-          </div>
-          <div>
-            <p id=sitter-space1>&nbsp;</p>
-            <span id="sitter1" style="font-size: 80px;">🧘🏻</span>
-          </div>
-          <div>
-            <p id=sitter-space2>&nbsp;</p>
-            <span id="sitter2" style="font-size: 80px;">‍🧘🏾</span>
-          </div>
+        <div id="sitters" style="display: flex; justify-content: center; flex-wrap: wrap;">
+          <!-- This is where the sitters will go. -->
         </div>
         <p id="question">
           Welcome all,<br/>
-          feel free to sit an chill for as long as you want.<br/><br/>
-          Should you require some inspiration, some introspective questions will appear here soon...
+          Feel free to sit for as long as you want.<br/><br/>
+          Should you require some inspiration, some introspective questions will appear here soon...<br/>Activate the gong for an audio queue.
         </p>
       </div>
 
@@ -85,34 +106,84 @@
       <script src="/socket.io/socket.io.js"></script>
       <script>
         var socket = io()
-
-        socket.on('question update', (question) => document.getElementById("question").innerHTML = question)
-        socket.on('count update', (count) => document.getElementById("count").innerHTML = count)
-
-        var sitterEmote = (sitter, emote) => {
-          document.getElementById(sitter).innerHTML = emote
-          setTimeout( () => {
-            document.getElementById(sitter).innerHTML = "&nbsp;"
-          }, 3000)
+        var mySitter = "none"        
+        let sittersDiv = document.querySelector("#sitters")
+        // let muted = JSON.parse(window.localStorage.getItem("muted"))
+        let muted = true
+        
+        let unmute = () => {
+          document.getElementById("mute-button").src = "https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fsound-on.svg?v=1587733304416"
+          document.getElementById("audio").play()
+          muted = false
+        }
+        
+        let mute = () => {
+          document.getElementById("mute-button").src = "https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fsound-off.svg?v=1587733304382"
+          document.getElementById("audio").pause();
+          document.getElementById("audio").currentTime = 0;
+          muted = true
+        }
+        
+        if (!muted) {
+          unmute() 
+        } else mute()
+        
+        function toggleMuted() {
+          if (muted) {
+            unmute()  
+          } else {
+            mute()
+          }
+          window.localStorage.setItem("muted", muted)
+        }
+        
+        var displaySitters = (sitters) => {
+          let newSitters = []
+          sitters.forEach((sitter, index) => {
+            let div = document.createElement("div")
+            let p = document.createElement("p")
+            let span = document.createElement("span")
+            div.setAttribute("id", "sitter" + index)
+            p.setAttribute("class", "sitter-space")
+            p.style.height = "15px"
+            span.setAttribute("class", "sitter")
+            span.textContent = sitter
+            
+            div.appendChild(p)
+            div.appendChild(span)
+            newSitters.push(div)
+          })
+          sittersDiv.innerHTML = "";
+          newSitters.forEach(div => {
+            sittersDiv.appendChild(div)
+          })
+        }
+        
+        var displayEmotion = (sitter, emoji) => {
+          Array.from(sittersDiv.children).forEach(div => {
+            if (div.children[1].textContent === sitter) {
+              div.children[0].textContent = emoji
+              setTimeout(() => {
+                div.children[0].textContent = ""
+              }, 3000)
+            }
+          })
         }
 
         var loveButton = document.getElementById("love-button")
-        loveButton.addEventListener('click', event => socket.emit('love-button') )
-        socket.on('love-button', () => {
-          let number = Math.floor(Math.random() * 3)
-          if (number === 0) sitterEmote("sitter-space0", "❤️")
-          if (number === 1) sitterEmote("sitter-space1", "❤️")
-          if (number === 2) sitterEmote("sitter-space2", "❤️")
-        })
-
+        loveButton.addEventListener('click', event => socket.emit('love-button', mySitter) )
+        socket.on('love-button', (sitter) => displayEmotion(sitter, "❤️"))
+                  
         var peaceButton = document.getElementById("peace-button")
-        peaceButton.addEventListener('click', event => socket.emit('peace-button') )
-        socket.on('peace-button', () => {
-          let number = Math.floor(Math.random() * 3)
-          if (number === 0) sitterEmote("sitter-space0", "✌️")
-          if (number === 1) sitterEmote("sitter-space1", "✌️")
-          if (number === 2) sitterEmote("sitter-space2", "✌️")
+        peaceButton.addEventListener('click', event => socket.emit('peace-button', mySitter) )
+        socket.on('peace-button', (sitter) => displayEmotion(sitter, "✌️"))
+        
+        socket.on('question update', (question) => {
+          if (muted != "true") document.getElementById("audio").play()
+          document.getElementById("question").innerHTML = question
         })
+        socket.on('sitters', (sitters) => displaySitters(sitters))
+        socket.on('sitter', (sitter) => mySitter = sitter)
       </script>
 
     </body>
