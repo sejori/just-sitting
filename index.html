@@ -20,7 +20,6 @@
           justify-content: center;
           text-align: center;
           margin: 0;
-          padding: 1rem;
         }
         button {
           height: 40px;
@@ -56,13 +55,31 @@
           padding: 10px;
           text-align: center;
         }
+        #sitters {
+          margin: auto;
+          max-width: 300px;
+        }
         .sitter {
           font-size: 80px;
+          width: 80px;
+          display: block;
+        }
+        #questions {
+          margin: 0.5rem;
+        }
+        #complete-form {
+          max-width: 200px;
+          margin: auto;
+          display: none;
         }
         @media only screen and (max-width: 600px) {
+          #sitters {
+            max-width: 200px;
+          }
           .sitter {
-          font-size: 50px;
-        }
+            font-size: 60px;
+            width: 60px;
+          }
         }
       </style>
     </head>
@@ -73,9 +90,9 @@
       </audio>
       
       <div class="header">
-        <div>
-          <button id="love-button">❤️</button>
-          <button id="peace-button">✌️</button>
+        <div id="timer">
+<!--           <button id="love-button">❤️</button>
+          <button id="peace-button">✌️</button> -->
         </div>
         <div style="flex-direction: column">
           <button onclick="toggleMuted()">
@@ -93,41 +110,74 @@
           <!-- This is where the sitters will go. -->
         </div>
         <p id="question">
-          Welcome all,<br/>
-          Feel free to sit for as long as you want.<br/><br/>
-          Should you require some inspiration, some introspective questions will appear here soon...<br/>Activate the gong for an audio queue.
+          Welcome,<br/>
+          Just sit and follow your breath until the timer runs out.
         </p>
+        <div id="complete-form">
+          <div style="display: flex; margin-bottom: 10px">
+            <label for="glad" style="flex: 1; text-align: left; margin-right: 5px;">Glad that I did this</label>
+            <input id="glad" type="checkbox" /><br />
+          </div>
+          <div style="display: flex; margin-bottom: 10px">
+            <label for="calmer" style="flex: 1; text-align: left; margin-right: 5px;">Calmer</label>
+            <input id="calmer" type="checkbox" /><br />
+          </div>
+          <div style="display: flex; margin-bottom: 10px">
+            <label for="more-grateful" style="flex: 1; text-align: left; margin-right: 5px;">More Grateful</label>
+            <input id="more-grateful" type="checkbox" /><br />
+          </div>
+
+          <div style="display: flex; margin-bottom: 10px">
+            <label for="mentally-clearer" style="flex: 1; text-align: left; margin-right: 5px;">Mentally Clearer</label>
+            <input id="mentally-clearer" type="checkbox" /><br />
+          </div>
+
+          <div style="display: flex; margin-bottom: 10px">
+            <label for="more-capable" style="flex: 1; text-align: left; margin-right: 5px;">More Capable</label>
+            <input id="more-capable" type="checkbox" /><br />
+          </div>
+
+          <button id="complete-form-submit" style="margin: 20px auto;">
+            Submit
+          </button>
+          <p>
+            Do you have thoughts on the site? We'd love your feedback: <a href="mailto:feedback@just-sitting.io?subject=Just-Sitting.io%20feedback">feedback@just-sitting.io</a>
+          </p>
+        </div>
       </div>
 
-      <div class="footer">
-        An app made by <a href="https://www.github.com/sejori">sebringrose</a>
+      <div id="footer" class="footer">
+<!--         An app made by <a href="https://www.github.com/sejori">sebringrose</a> -->
       </div>
 
       <script src="/socket.io/socket.io.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/easytimer@1.1.3/dist/easytimer.min.js"></script>
       <script>
-        var socket = io()
-        var mySitter = "none"        
+        let socket = io("https://just-sitting.glitch.me")
+        let session_id
+        socket.on("connect", () => session_id = socket.id)
+        
+        let mySitter = "none"
         let sittersDiv = document.querySelector("#sitters")
         // let muted = JSON.parse(window.localStorage.getItem("muted"))
+        let sessionComplete = false
         let muted = true
         
+        // SOUND CONTROL LOGIC
         let unmute = () => {
           document.getElementById("mute-button").src = "https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fsound-on.svg?v=1587733304416"
           document.getElementById("audio").play()
           muted = false
         }
-        
         let mute = () => {
           document.getElementById("mute-button").src = "https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fsound-off.svg?v=1587733304382"
           document.getElementById("audio").pause();
           document.getElementById("audio").currentTime = 0;
           muted = true
         }
-        
         if (!muted) {
           unmute() 
         } else mute()
-        
         function toggleMuted() {
           if (muted) {
             unmute()  
@@ -137,19 +187,22 @@
           window.localStorage.setItem("muted", muted)
         }
         
+        // SITTER VIEW LOGIC
         var displaySitters = (sitters) => {
           let newSitters = []
           sitters.forEach((sitter, index) => {
+            if (index > 8) return null
+
             let div = document.createElement("div")
-            let p = document.createElement("p")
             let span = document.createElement("span")
             div.setAttribute("id", "sitter" + index)
-            p.setAttribute("class", "sitter-space")
-            p.style.height = "15px"
             span.setAttribute("class", "sitter")
-            span.textContent = sitter
             
-            div.appendChild(p)
+            // "..." in final space if more than 9 sitters
+            span.textContent = index === 8 && sitters.length > 9
+              ? "..."
+              : sitter
+            
             div.appendChild(span)
             newSitters.push(div)
           })
@@ -157,28 +210,55 @@
           newSitters.forEach(div => {
             sittersDiv.appendChild(div)
           })
+          
+          document.querySelector("#footer").textContent = `${sitters.length} just sitting right now.`
         }
         
-        var displayEmotion = (sitter, emoji) => {
-          Array.from(sittersDiv.children).forEach(div => {
-            if (div.children[1].textContent === sitter) {
-              div.children[0].textContent = emoji
-              setTimeout(() => {
-                div.children[0].textContent = ""
-              }, 3000)
-            }
+        // TIMER & SESSION FINISH LOGIC
+        // set-up timer for form from URL params
+        const time = document.location.pathname.substring(1) || "10";
+        const timer = new Timer();
+        const finishSession = () => {
+          socket.disconnect();
+          
+          document.querySelector("#sitters").style.display = "none"
+          const questionP = document.querySelector("#question")
+          questionP.textContent = `Session complete. How do you feel?`
+          
+          const completeForm = document.querySelector("#complete-form")
+          completeForm.style.display = "block"
+          
+          document.querySelector("#complete-form-submit").addEventListener("click", () => {
+            completeForm.style.display = "none"
+          
+            const questions = Array.from(completeForm.getElementsByTagName('div')).map(div => {
+              const label = div.getElementsByTagName('label')[0]
+              const checkbox = div.getElementsByTagName('input')[0]
+              return `${label.getAttribute("for")}-${checkbox.checked}`
+            })
+                                                                    
+            fetch("/postResponse", {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ data: JSON.stringify(questions), session_id })
+            })
+            questionP.textContent = "Thank you for just sitting with us. Until next time ✌️"
           })
         }
-
-        var loveButton = document.getElementById("love-button")
-        loveButton.addEventListener('click', event => socket.emit('love-button', mySitter) )
-        socket.on('love-button', (sitter) => displayEmotion(sitter, "❤️"))
-                  
-        var peaceButton = document.getElementById("peace-button")
-        peaceButton.addEventListener('click', event => socket.emit('peace-button', mySitter) )
-        socket.on('peace-button', (sitter) => displayEmotion(sitter, "✌️"))
         
+        timer.start({ countdown: true, startValues: time === "dev" ? { seconds: 1 } : { minutes: Number(time) } });
+        
+        document.querySelector("#timer").textContent = timer.getTimeValues().toString();
+        timer.addEventListener('secondsUpdated', function (e) {
+          document.querySelector("#timer").textContent = timer.getTimeValues().toString();
+        });
+        timer.addEventListener('targetAchieved', finishSession);
+        
+        // WEBSOCKET LISTENERS
         socket.on('question update', (question) => {
+          if (sessionComplete) return
           if (muted != "true") document.getElementById("audio").play()
           document.getElementById("question").innerHTML = question
         })
