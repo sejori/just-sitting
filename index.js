@@ -66,6 +66,9 @@ app.get("/responses", async (req, res) => {
     res.send(JSON.stringify(rows))
   });
 });
+
+app.get('/new', (req, res) => { res.sendFile(__dirname + '/meditate.html') })
+app.get('/business', (req, res) => { res.sendFile(__dirname + '/business.html') })
 // default to html file
 app.get('*', (req, res) => { res.sendFile(__dirname + '/index.html') })
 
