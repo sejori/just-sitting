@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+      <title>Just sitting</title>
+      <link rel="icon" 
+        type="image/png" 
+        href="https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fjust-sitting.png?v=1587314467138">
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        html { height: 100%; font-family: 'Montserrat', sans-serif; }
+        body {
+          background-image: linear-gradient(141deg, #92cded 0%, #1fc8db 51%, #2cb5e8 75%);
+          color: white;
+          text-shadow: 1px 1px 3px #040404;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          text-align: center;
+          margin: 0;
+        }
+        button {
+          height: 40px;
+          border-radius: 5px;
+          border: none;
+          padding: 10px;
+          margin: 5px;
+          box-shadow: 1px 1px 2px #888;
+          background-color: white;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .header {
+          text-align: left;
+          position: fixed;
+          left: 0;
+          top: 0;
+          display: flex;
+          justify-content: space-between;
+          width: 100%
+        }
+        .header div {
+          display: flex;
+          padding: 15px;
+        }
+        .footer {
+          position: fixed;
+          left: 0;
+          bottom: 0;
+          width: 100%;
+          padding: 10px;
+          text-align: center;
+        }
+        #sitters {
+          margin: auto;
+          max-width: 300px;
+        }
+        .sitter {
+          font-size: 80px;
+          width: 80px;
+          display: block;
+        }
+        #questions {
+          margin: 0.5rem;
+        }
+        #complete-form {
+          max-width: 200px;
+          margin: auto;
+          display: none;
+        }
+        @media only screen and (max-width: 600px) {
+          #sitters {
+            max-width: 200px;
+          }
+          .sitter {
+            font-size: 60px;
+            width: 60px;
+          }
+        }
+      </style>
+    </head>
+
+    <body>
+      <audio id="audio" volume="0.5">
+        <source src="https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2FTemple%20Bell-SoundBible.com-756181215.mp3?v=1587732536317" type="audio/mpeg">
+      </audio>
+      
+      <div class="header">
+        <div id="timer">
+<!--           <button id="love-button">❤️</button>
+          <button id="peace-button">✌️</button> -->
+        </div>
+        <div style="flex-direction: column">
+          <button onclick="toggleMuted()">
+            <span>Gong:&nbsp;</span>
+            <img id="mute-button" src="https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fsound-on.svg?v=1587733304416">
+          </button>
+          <p style="font-size: 8px">
+            (requires site audio enabled)
+          </p>
+        </div>
+      </div>
+
+      <div class="app">
+        <div id="sitters" style="display: flex; justify-content: center; flex-wrap: wrap;">
+          <!-- This is where the sitters will go. -->
+        </div>
+        <p id="question">
+          Welcome,<br/>
+          Just sit and follow your breath until the timer runs out.
+        </p>
+        
+      </div>
+
+      <div id="footer" class="footer">
+<!--         An app made by <a href="https://www.github.com/sejori">sebringrose</a> -->
+      </div>
+
+    </body>
+  </html>

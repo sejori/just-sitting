@@ -1,0 +1,17 @@
+.question-animated {
+    animation: question 5s ease-in-out;
+    transform-origin: center;
+    opacity: 0;
+}
+
+@keyframes question {
+    0% {
+        opacity: 1;
+    }
+    50% {
+       opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}

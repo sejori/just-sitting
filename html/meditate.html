@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      rel="shortcut icon"
+      href="https://cdn.glitch.global/beeb51f9-1344-467c-a2f1-0cfe203a9643/logo.png"
+      type="image/x-icon"
+    />
+    <link rel="stylesheet" href="/css/breathing.css" />
+    <link rel="stylesheet" href="/css/question.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--   TAILWIND   -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!--   ADD TO CALENDER - https://github.com/jekuer/add-to-calendar-button   -->
+    <link rel="stylesheet" href="/css/atcb.min.css">
+    <title>Just Sitting</title>
+  </head>
+  <body
+    class="min-h-screen bg-cover bg-center bg-gradient-to-b from-cyan-400 via-sky-200 to-pink-200"
+  >
+    <audio id="audio" volume="0.5">
+      <source
+        src="https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2FTemple%20Bell-SoundBible.com-756181215.mp3?v=1587732536317"
+        type="audio/mpeg"
+      />
+    </audio>
+
+    <header
+      class="z-10 relative p-6 logo flex align-middle items-center justify-between"
+    >
+      <!-- Left Menu -->
+      <div>
+        <div class="relative inline-block text-left">
+          <button
+            id="timer-button"
+            class="logo flex align-middle items-center hover:cursor-pointer"
+          >
+            <img
+              src="https://cdn.glitch.global/beeb51f9-1344-467c-a2f1-0cfe203a9643/logo.png"
+              alt="Just Sitting Logo"
+              class="w-14 h-14"
+            />
+            <p id="timer"></p>
+          </button>
+
+          <div
+            id="timer-controls"
+            class="origin-top-left absolute hidden left-0 mt-2 w-40 rounded-lg rounded-tl-none rounded-br-none shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none text-right"
+            role="menu"
+            aria-orientation="vertical"
+            aria-labelledby="timer-controls-button"
+            tabindex="-1"
+          >
+            <div class="py-1 text-left flex justify-around" role="none">
+              <!-- Active: "bg-gray-100 text-gray-900", Not Active: "text-gray-700" -->
+              <button
+                id="one-min-button"
+                class="text-gray-700 block px-4 py-2 text-sm"
+                role="menuitem"
+                tabindex="-1"
+              >
+                +1
+              </button>
+              <button
+                id="two-min-button"
+                class="text-gray-700 block px-4 py-2 text-sm"
+                role="menuitem"
+                tabindex="-1"
+              >
+                +2
+              </button>
+              <button
+                id="three-min-button"
+                class="text-gray-700 block px-4 py-2 text-sm"
+                role="menuitem"
+                tabindex="-1"
+              >
+                +3
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Menu -->
+      <div>
+        <div class="relative inline-block text-left">
+          <button id="menu-button" class="hover:cursor-pointer text-xl">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              fill="currentColor"
+              class="bi bi-sliders"
+              viewbox="0 0 16 16"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM9.05 3a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0V3h9.05zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.05 8a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0H0V8h2.05zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2.45 1a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1h9.05z"
+              />
+            </svg>
+          </button>
+
+          <div
+            id="menu"
+            class="origin-top-right absolute hidden right-0 mt-2 w-40 rounded-lg rounded-tr-none rounded-bl-none shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none text-right"
+            role="menu"
+            aria-orientation="vertical"
+            aria-labelledby="menu-button"
+            tabindex="-1"
+          >
+            <div class="py-1 text-left" role="none">
+              <!-- Active: "bg-gray-100 text-gray-900", Not Active: "text-gray-700" -->
+              <button
+                id="mute-button"
+                class="text-gray-700 block px-4 py-2 text-sm"
+                role="menuitem"
+                tabindex="-1"
+              >
+                Turn Sound On
+              </button>
+              <a
+                href="mailto:feedback@just-sitting.io?subject=Just-Sitting.io%20feedback"
+                id="request-feature-button"
+                class="text-gray-700 block px-4 py-2 text-sm"
+                role="menuitem"
+                tabindex="-1"
+                >Request a Feature</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section
+      id="breathing"
+      class="animation w-2/3 mx-auto absolute top-0 left-0 flex h-screen w-screen align-middle items-center overflow-hidden"
+    >
+      <div class="breathing mx-auto opacity-50">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+      </div>
+    </section>
+
+    <section
+      class="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 p-5 text-center mx-auto opacity:30 max-w-xs"
+    >
+      <p id="sitters" class="text-5xl mx-auto" />
+    </section>
+    
+    <section
+      class="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 p-5 text-center mx-auto opacity:30 max-w-xs"
+    >
+      <button id="start-button" class="text-5xl mx-auto">START</button>
+    </section>
+
+    <div
+      id="question"
+      class="hidden absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 text-5xl bg-white bg-opacity-60 text-center rounded-lg p-5"
+    ></div>
+    
+    <footer
+      class="z-10 absolute bottom-0 w-full"
+    >
+      <!-- Bottom counter -->
+      <section
+        class="sitting-count p-6 text-center w-full opacity-20 hover:opacity-70"
+      >
+        <p id="footer-text" class="text-xl text-slate-500 mt-5">
+          You are sitting with 0 others.
+        </p>
+      </section>
+    </footer>
+  
+    <!-- Complete form (displays at end of session) -->
+    <section
+      id="complete-section"
+      class="hidden absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 p-5 text-center mx-auto max-w-sm opacity:30"
+    > 
+      <p class="text-lg mb-5">Session complete.<br>Keep up the habit by adding a session to your calendar?</p>
+      
+      <div style="display: flex; margin-bottom: 10px">
+        <label
+          for="datetime-input"
+          style="flex: 1; text-align: left; margin-right: 5px"
+          >Date &#38; Time:</label
+        >
+        <input id="datetime-input" type="datetime-local" /><br />
+      </div>
+      
+      <div style="display: flex; margin-bottom: 10px">
+        <label
+          for="duration-input"
+          style="flex: 1; text-align: left; margin-right: 5px"
+          >Duration (minutes):</label
+        >
+        <input id="duration-input" type="number" size="2" min="1" max="60" /><br />
+      </div>
+      
+      <div id="add-to-call-div" style="display: flex; margin-bottom: 10px">
+      </div>
+      
+      <p>
+        Do you have thoughts on the site? We'd love your feedback:
+        <a
+          class="underline"
+          href="mailto:feedback@just-sitting.io?subject=Just-Sitting.io%20feedback"
+          >feedback@just-sitting.io</a
+        >
+      </p>
+    </section>
+    
+    <!-- force https for websockets -->
+    <script>
+      if (location.protocol != "https:") {
+        location.href =
+          "https:" +
+          window.location.href.substring(window.location.protocol.length);
+      }
+    </script>
+  
+    <!-- JS deps -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/easytimer@1.1.3/dist/easytimer.min.js"></script>
+    <script src="/js/atcb.min.js" defer></script>
+    <script src="/js/nosleep.min.js"></script>
+    
+    <!-- Main beefy script! -->
+    <script>
+      let session_id;
+      let mySitter;
+      let sitterCount;
+      let sessionComplete = false;
+
+      const duration = document.location.pathname.substring(1) || "5";
+      const questionDuration = 5000;
+      
+      // defined out here for scoping
+      let socket;
+      
+      // used to enable/disable screen awake lock in start and finish fcns
+      const noSleep = new NoSleep();
+
+      // DOM element links
+      const sittersP = document.querySelector("#sitters");
+      const questionP = document.querySelector("#question");
+      const footerP = document.querySelector("#footer-text");
+
+      // SOUND CONTROL LOGIC
+      // let muted = JSON.parse(window.localStorage.getItem("muted"))
+      let muted = true;
+      const muteBtn = document.querySelector("#mute-button");
+      let unmute = () => {
+        document.getElementById("mute-button").src =
+          "https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fsound-on.svg?v=1587733304416";
+        document.getElementById("audio").play();
+        muted = false;
+        muteBtn.textContent = "Turn Sound Off";
+      };
+      let mute = () => {
+        document.getElementById("mute-button").src =
+          "https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fsound-off.svg?v=1587733304382";
+        document.getElementById("audio").pause();
+        document.getElementById("audio").currentTime = 0;
+        muted = true;
+        muteBtn.textContent = "Turn Sound On";
+      };
+      function toggleMuted() {
+        if (muted) {
+          unmute();
+        } else {
+          mute();
+        }
+        window.localStorage.setItem("muted", muted);
+      }
+      muteBtn.addEventListener("click", () =>
+        emitInteraction(`toggle-sound-${muted ? "on" : "off"}`, toggleMuted)
+      );
+
+      // SITTER VIEW LOGIC
+      const displaySitters = (sitters) => {
+        let newSitters = [];
+        sitters.forEach((sitter, index) => {
+          if (index > 17) return null;
+          let span = document.createElement("span");
+          span.textContent = sitter;
+          newSitters.push(span);
+        });
+        sittersP.innerHTML = "";
+        newSitters.forEach((span) => sittersP.appendChild(span));
+
+        sitterCount = sitters.length - 1;
+        footerP.textContent = `You are sitting with ${sitterCount} others.`;
+      };
+
+      // QUESTION VIEW LOGIC
+      const displayQuestion = (question, time) => {
+        // show question div
+        questionP.classList.toggle("hidden");
+        questionP.classList.toggle("question-animated");
+        questionP.innerHTML = question;
+
+        setTimeout(() => {
+          // hide question div
+          questionP.classList.toggle("hidden");
+          questionP.classList.toggle("question-animated");
+        }, time ? time : questionDuration);
+      };
+      
+      // FINISHING FCN TO BE TRIGGERED BY TIMER
+      const finishSession = () => {
+        // allow screen sleep
+        noSleep.disable();
+        
+        socket.disconnect();
+        footerP.textContent = `You were sitting with ${
+          sitterCount ? sitterCount : 0
+        } others.`;
+
+        // hide all the stuff
+        sittersP.classList.toggle("hidden");
+        document.querySelector("#breathing").classList.toggle("hidden");
+
+        const completeSection = document.querySelector("#complete-section");
+        completeSection.style.display = "block";
+  
+        let datetime, duration;
+        const addToCallSetup = (datetimeP, durationP) => {
+          if (datetimeP) datetime = datetimeP;
+          if (durationP) duration = durationP;
+          
+          console.log(datetime)
+          console.log(duration)
+          
+          const eventData = {
+            "event": {
+              "@context":"https://schema.org",
+              "@type":"Event",
+              "name":"Add the title of your event",
+              "description":"A nice description does not hurt",
+              "startDate":"2022-02-21T10:13",
+              "endDate":"2022-03-24T17:57",
+              "location":"Somewhere over the rainbow"
+            },
+            "label":"Add to Calendar",
+            "options":[
+              "Apple",
+              "Google",
+              "iCal",
+              "Microsoft365",
+              "Outlook.com",
+              "Yahoo"
+            ],
+            "timeZone":"Europe/Berlin",
+            "timeZoneOffset":"+01:00",
+            "trigger":"click",
+            "iCalFileName":"Reminder-Event"
+          }
+        }
+        
+        document
+          .querySelector("#datetime-input")
+          .addEventListener("change", (e) =>
+            emitInteraction("datetime-input-change", (e) => addToCallSetup(e.target.value, null))
+          )
+        document
+          .querySelector("#duration-input")
+          .addEventListener("change", (e) =>
+            emitInteraction("duration-input-change", (e) => addToCallSetup(null, e.target.value))
+          )
+
+      };
+      
+      // TIMER LOGIC
+      // set-up timer for form from URL params
+      let timer;
+      function startTimer({ minutes, seconds }) {
+        timer = new Timer()
+        timer.start({
+          countdown: true,
+          startValues:
+            duration === "dev" ? { seconds: 1 } : { minutes, seconds },
+        });
+
+        document.querySelector("#timer").textContent = timer
+          .getTimeValues()
+          .toString();
+        timer.addEventListener("secondsUpdated", function (e) {
+          document.querySelector("#timer").textContent = timer
+            .getTimeValues()
+            .toString();
+        });
+        timer.addEventListener("targetAchieved", finishSession);
+      }
+      function getRemainingTime() {
+        return timer.getTimeValues();
+      }
+      function clearTimer() {
+        timer.stop();
+      }
+      
+      // TIMER CONTROLS
+      function toggleTimerControls() {
+        const timerCtrls = document.querySelector("#timer-controls");
+        // disabled if session not started
+        if (!session_id) return
+        return timerCtrls.style.display === "block"
+          ? (timerCtrls.style.display = "none")
+          : (timerCtrls.style.display = "block");
+      }
+      function extendSession(minExt) {
+        const time = getRemainingTime()
+        const newMins = time.minutes + minExt;
+        const seconds = time.seconds
+        clearTimer()
+        startTimer({ minutes: newMins, seconds })
+      }
+      document
+        .querySelector("#timer-button")
+        .addEventListener("click", () => 
+          emitInteraction("toggle-timer-controls", toggleTimerControls)
+        );
+      // duration extension buttons
+      document
+        .querySelector("#one-min-button")
+        .addEventListener("click", () =>
+          emitInteraction("1-min-extension", () => extendSession(1))
+        );
+      document
+        .querySelector("#two-min-button")
+        .addEventListener("click", () =>
+          emitInteraction("2-min-extension", () => extendSession(2))
+        );
+      document
+        .querySelector("#three-min-button")
+        .addEventListener("click", () =>
+          emitInteraction("3-min-extension", () => extendSession(3))
+        );
+
+      // MENU CONTROLS
+      function toggleMenu() {
+        const menu = document.querySelector("#menu");
+        return menu.style.display === "block"
+          ? (menu.style.display = "none")
+          : (menu.style.display = "block");
+      }
+      document
+        .querySelector("#menu-button")
+        .addEventListener("click", () =>
+          emitInteraction("toggle-menu", toggleMenu)
+        );
+      
+      // INTERACTION LOGGING FUNCTION
+      // emitInt fcn defined here for scoping reasons
+      let emitInteraction = (event, fcn) => fcn();
+      
+
+      
+      // THE MAIN STARTER FUNCTION
+      // ***
+      // **
+      // *
+      //
+      const startButton = document.querySelector("#start-button")
+      function start() {
+        startButton.style.display = "none";
+        
+        // stop screen sleep on mobile
+        noSleep.enable();
+        
+        // SOCKET SETUP
+        const manager = new io.Manager("https://just-sitting.glitch.me", {
+          reconnectionDelayMax: 10000,
+          query: {
+            duration: duration,
+          },
+        });
+        socket = manager.socket("/");
+        socket.on("connect", () => (session_id = socket.id));
+        
+        // WEBSOCKET DOM UPDATE LISTENERS
+        socket.on("question update", (question) => {
+          if (sessionComplete) return;
+          if (muted != "true") document.getElementById("audio").play();
+          displayQuestion(question);
+        });
+        socket.on("sitter", (sitter) => (mySitter = sitter));
+        socket.on("sitters", (sitters) => displaySitters(sitters));
+        
+        // redefine this with socket emit
+        emitInteraction = (event, fcn) => {
+          socket.emit("interaction", `${event}-${Date.now()}`);
+          return fcn();
+        };
+        
+        // start default timer
+        startTimer({ minutes: Number(duration) });
+        
+        // Starting text
+        displayQuestion("Welcome. Please just sit and breathe.");
+      }
+      startButton.addEventListener("click", start)
+    </script>
+  </body>
+</html>

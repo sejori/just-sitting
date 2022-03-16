@@ -2,15 +2,20 @@
   "name": "just-sitting",
   "version": "1.0.0",
   "description": "a webapp for people that just want to sit.",
-  "main": "index.js",
+  "main": "server.js",
   "author": "sebringrose",
   "license": "ISC",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=12.13.0"
   },
   "dependencies": {
-    "express": "^4.16.4",
-    "socket.io": "^2.2.0",
-    "sqlite3": "^4.1.1"
+    "express": "^4.17.2",
+    "socket.io": "^4.4.1",
+    "sqlite3": "^5.0.2",
+    "tailwindcss": "^3.0.19",
+    "postcss": "^8.4.6"
   }
 }
