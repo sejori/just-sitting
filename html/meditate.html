@@ -195,7 +195,7 @@
     > 
       <p class="text-lg mb-5">Session complete.<br>Keep up the habit by adding a session to your calendar?</p>
       
-      <div style="display: flex; margin-bottom: 10px">
+      <div style="display: flex; flex-wrap: wrap; margin-bottom: 10px">
         <label
           for="datetime-input"
           style="flex: 1; text-align: left; margin-right: 5px"
@@ -204,7 +204,7 @@
         <input id="datetime-input" type="datetime-local" /><br />
       </div>
       
-      <div style="display: flex; margin-bottom: 10px">
+      <div style="display: flex; flex-wrap: wrap; margin-bottom: 10px">
         <label
           for="duration-input"
           style="flex: 1; text-align: left; margin-right: 5px"
@@ -213,7 +213,7 @@
         <input id="duration-input" type="number" size="2" min="1" max="60" /><br />
       </div>
       
-      <div id="add-to-call-div" style="display: flex; margin-bottom: 10px">
+      <div id="add-to-cal-div" style="display: flex; justify-content: center; margin-bottom: 10px">
       </div>
       
       <p>
@@ -333,56 +333,83 @@
           sitterCount ? sitterCount : 0
         } others.`;
 
-        // hide all the stuff
+        // hide sitters & breathing
         sittersP.classList.toggle("hidden");
         document.querySelector("#breathing").classList.toggle("hidden");
-
+        
+        // set initial calendar values & display complete section
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.querySelector("#datetime-input").value = tomorrow.toISOString().slice(0, 16);
+        
+        let duration = 10;
+        document.querySelector("#duration-input").value = duration;
+        
         const completeSection = document.querySelector("#complete-section");
         completeSection.style.display = "block";
-  
-        let datetime, duration;
-        const addToCallSetup = (datetimeP, durationP) => {
-          if (datetimeP) datetime = datetimeP;
-          if (durationP) duration = durationP;
+        
+        // initial values for addToCal data
+        let startDate = tomorrow; 
+        let endDate = new Date(tomorrow); endDate.setMinutes(endDate.getMinutes() + duration); 
+        const addToCalSetup = (datetimeP, durationP) => {
+          if (datetimeP) startDate = new Date(datetimeP);
           
-          console.log(datetime)
-          console.log(duration)
+          if (startDate && durationP) {
+            duration = durationP;
+            endDate = new Date(startDate);
+            endDate.setMinutes(startDate.getMinutes() + Number(durationP));
+          }
+          
+          console.log(startDate)
+          console.log(endDate)
           
           const eventData = {
             "event": {
               "@context":"https://schema.org",
               "@type":"Event",
-              "name":"Add the title of your event",
-              "description":"A nice description does not hurt",
-              "startDate":"2022-02-21T10:13",
-              "endDate":"2022-03-24T17:57",
-              "location":"Somewhere over the rainbow"
+              "name":"Just Sitting",
+              "description":"Taking some time to just sit",
+              "startDate": startDate.toISOString().slice(0,16),
+              "endDate": endDate.toISOString().slice(0,16),
+              "location":`https://just-sitting.io/${duration}`
             },
             "label":"Add to Calendar",
             "options":[
               "Apple",
               "Google",
-              "iCal",
-              "Microsoft365",
+              // "iCal",
+              // "Microsoft365",
               "Outlook.com",
-              "Yahoo"
+              // "Yahoo"
             ],
-            "timeZone":"Europe/Berlin",
-            "timeZoneOffset":"+01:00",
+            "timeZone":Intl.DateTimeFormat().resolvedOptions().timeZone,
             "trigger":"click",
-            "iCalFileName":"Reminder-Event"
+            "iCalFileName":"just-sitting-cal-event"
           }
+          
+          const div = document.createElement("div");
+          div.className = "atcb"; 
+          const script = document.createElement("script");
+          script.type = "application/ld+json";
+          script.innerHTML = JSON.stringify(eventData)
+          div.appendChild(script);
+          
+          console.log(div)
+          const atcDiv = document.querySelector("#add-to-cal-div");
+          atcDiv.replaceChildren(div);
+          atcb_init();
         }
+        addToCalSetup();
         
         document
           .querySelector("#datetime-input")
           .addEventListener("change", (e) =>
-            emitInteraction("datetime-input-change", (e) => addToCallSetup(e.target.value, null))
+            emitInteraction("datetime-input-change", () => addToCalSetup(e.target.value, null))
           )
         document
           .querySelector("#duration-input")
           .addEventListener("change", (e) =>
-            emitInteraction("duration-input-change", (e) => addToCallSetup(null, e.target.value))
+            emitInteraction("duration-input-change", () => addToCalSetup(null, e.target.value))
           )
 
       };
