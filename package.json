@@ -5,6 +5,7 @@
   "main": "server.js",
   "author": "sebringrose",
   "license": "ISC",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },

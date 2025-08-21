@@ -235,13 +235,13 @@
     </section>
     
     <!-- force https for websockets -->
-    <script>
+    <!-- <script>
       if (location.protocol != "https:") {
         location.href =
           "https:" +
           window.location.href.substring(window.location.protocol.length);
       }
-    </script>
+    </script> -->
   
     <!-- JS deps -->
     <script src="/socket.io/socket.io.js"></script>
@@ -576,7 +576,7 @@
         noSleep.enable();
         
         // SOCKET SETUP
-        const manager = new io.Manager("https://just-sitting.glitch.me", {
+        const manager = new io.Manager("/", {
           reconnectionDelayMax: 10000,
           query: {
             duration: duration,

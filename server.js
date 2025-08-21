@@ -1,25 +1,35 @@
-const app = require("express")();
-const http = require("http").Server(app);
-const io = require("socket.io")(http, {
+import nodeHttp from "node:http";
+import fs from "node:fs";
+import express from "express";
+import bodyParser from "body-parser";
+import { Server } from "socket.io";
+import sqlite3 from "sqlite3";
+
+import { sitterOptions, questions } from "./lib/data.js";
+
+
+const app = express();
+const http = nodeHttp.Server(app);
+const io = new Server(http, {
   cors: {
-    origin: "https://just-sitting.io",
+    origin: [
+      "http://localhost:3333",
+      "http://127.0.0.1:3333",
+      "https://just-sitting.io" // prod
+    ],
     methods: ["GET", "POST"],
   },
 });
-const bodyParser = require("body-parser");
-const fs = require("fs");
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const { sitterOptions, questions } = require("./lib/data.js");
 
 // SQLITE3 DB SET-UP
 //
 // init sqlite db for anon session analytics and feedback responses
 const dbFile = "./.data/sqlite.db";
 const exists = fs.existsSync(dbFile);
-const sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database(dbFile);
 
 // if ./.data/sqlite.db does not exist, create it, otherwise print record count in tables to console
@@ -88,36 +98,36 @@ app.get("/responses", async (req, res) => {
 
 // CSS OUTPUTS
 app.get("/css/breathing.css", (req, res) => {
-  res.sendFile(__dirname + "/css/breathing.css");
+  res.sendFile(new URL("./css/breathing.css", import.meta.url).pathname);
 });
 app.get("/css/question.css", (req, res) => {
-  res.sendFile(__dirname + "/css/question.css");
+  res.sendFile(new URL("./css/question.css", import.meta.url).pathname);
 });
 app.get("/css/meditate.css", (req, res) => {
-  res.sendFile(__dirname + "/css/meditate.css");
+  res.sendFile(new URL("./css/meditate.css", import.meta.url).pathname);
 });
 app.get("/css/business.css", (req, res) => {
-  res.sendFile(__dirname + "/css/business.css");
+  res.sendFile(new URL("./css/business.css", import.meta.url).pathname);
 });
 app.get("/css/atcb.min.css", (req, res) => {
-  res.sendFile(__dirname + "/css/atcb.min.css");
+  res.sendFile(new URL("./css/atcb.min.css", import.meta.url).pathname);
 });
 
 // JS OUTPUTS
 app.get("/js/nosleep.min.js", (req, res) => {
-  res.sendFile(__dirname + "/js/nosleep.min.js");
+  res.sendFile(new URL("./js/nosleep.min.js", import.meta.url).pathname);
 });
 app.get("/js/atcb.min.js", (req, res) => {
-  res.sendFile(__dirname + "/js/atcb.min.js");
+  res.sendFile(new URL("./js/atcb.min.js", import.meta.url).pathname);
 });
 
 // HTML OUTPUTS
 app.get("/business", (req, res) => {
-  res.sendFile(__dirname + "/html/business.html");
+  res.sendFile(new URL("./html/business.html", import.meta.url).pathname);
 });
 // default to meditate html file
 app.get("*", (req, res) => {
-  res.sendFile(__dirname + "/html/meditate.html");
+  res.sendFile(new URL("./html/meditate.html", import.meta.url).pathname);
 });
 
 // INTERNAL SERVER QUESTION LOGIC
@@ -206,5 +216,5 @@ const cleanseString = function (string) {
 };
 
 http.listen(process.env.PORT || 3333, () =>
-  console.log(`Example app listening on port ${process.env.PORT}!`)
+  console.log(`Example app listening on port ${process.env.PORT || 3333}!`)
 );
