@@ -56,7 +56,7 @@
 
           <div
             id="timer-controls"
-            class="origin-top-left absolute hidden left-0 mt-2 w-40 rounded-lg rounded-tl-none rounded-br-none shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none text-right"
+            class="origin-top-left hidden absolute left-0 mt-2 w-40 rounded-lg rounded-tl-none rounded-br-none shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none text-right"
             role="menu"
             aria-orientation="vertical"
             aria-labelledby="timer-controls-button"
@@ -70,7 +70,7 @@
                 role="menuitem"
                 tabindex="-1"
               >
-                +1
+                +3
               </button>
               <button
                 id="two-min-button"
@@ -78,7 +78,7 @@
                 role="menuitem"
                 tabindex="-1"
               >
-                +2
+                +5
               </button>
               <button
                 id="three-min-button"
@@ -86,7 +86,7 @@
                 role="menuitem"
                 tabindex="-1"
               >
-                +3
+                +10
               </button>
             </div>
           </div>
@@ -171,9 +171,13 @@
     </section>
 
     <div
-      id="question"
-      class="hidden absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 text-5xl bg-white bg-opacity-60 text-center rounded-lg p-5"
-    ></div>
+      id="question-div"
+      class="hidden absolute flex flex-col flex-wrap justify-center top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white bg-opacity-60 text-center rounded-lg p-5"
+    >
+      <p id="question" class="text-5xl"></p>
+      <button id="journal-btn" class="bg-white bg-opacity-60 text-center rounded-lg p-2">journal</button>
+      <textarea id="journal" class="hidden" rows="7"></textarea>
+    </div>
     
     <footer
       class="z-10 absolute bottom-0 w-full"
@@ -193,9 +197,13 @@
       id="complete-section"
       class="hidden absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 p-5 text-center mx-auto max-w-sm opacity:30"
     > 
-      <p class="text-lg mb-5">Session complete.<br>Keep up the habit by adding a session to your calendar?</p>
+      <p class="text-lg mb-5">Session complete.</p>
       
-      <div style="display: flex; margin-bottom: 10px">
+      <div id="journal-reveal" class="hidden"></div>
+      
+      <p class="text-lg mb-5">Keep up the habit by adding a session to your calendar?</p>
+      
+      <div style="display: flex; flex-wrap: wrap; margin-bottom: 10px">
         <label
           for="datetime-input"
           style="flex: 1; text-align: left; margin-right: 5px"
@@ -204,7 +212,7 @@
         <input id="datetime-input" type="datetime-local" /><br />
       </div>
       
-      <div style="display: flex; margin-bottom: 10px">
+      <div style="display: flex; flex-wrap: wrap; margin-bottom: 10px">
         <label
           for="duration-input"
           style="flex: 1; text-align: left; margin-right: 5px"
@@ -213,7 +221,7 @@
         <input id="duration-input" type="number" size="2" min="1" max="60" /><br />
       </div>
       
-      <div id="add-to-call-div" style="display: flex; margin-bottom: 10px">
+      <div id="add-to-cal-div" style="display: flex; justify-content: center; margin-bottom: 10px">
       </div>
       
       <p>
@@ -247,9 +255,10 @@
       let mySitter;
       let sitterCount;
       let sessionComplete = false;
-
+      let questionPrompt = "";
+      let journal = {};
+      
       const duration = document.location.pathname.substring(1) || "5";
-      const questionDuration = 5000;
       
       // defined out here for scoping
       let socket;
@@ -258,14 +267,27 @@
       const noSleep = new NoSleep();
 
       // DOM element links
+      const muteBtn = document.querySelector("#mute-button");
       const sittersP = document.querySelector("#sitters");
+      const questionDiv = document.querySelector("#question-div");
       const questionP = document.querySelector("#question");
+      const journalBtn = document.querySelector("#journal-btn");
+      const journalTA = document.querySelector("#journal");
+      const completeSection = document.querySelector("#complete-section");
+      const journalReveal = document.querySelector("#journal-reveal");
       const footerP = document.querySelector("#footer-text");
+    
+      // MENU CONTROLS
+      function toggleMenu() {
+        const menu = document.querySelector("#menu");
+        return menu.style.display === "block"
+          ? (menu.style.display = "none")
+          : (menu.style.display = "block");
+      }
 
       // SOUND CONTROL LOGIC
       // let muted = JSON.parse(window.localStorage.getItem("muted"))
       let muted = true;
-      const muteBtn = document.querySelector("#mute-button");
       let unmute = () => {
         document.getElementById("mute-button").src =
           "https://cdn.glitch.com/beeb51f9-1344-467c-a2f1-0cfe203a9643%2Fsound-on.svg?v=1587733304416";
@@ -289,9 +311,6 @@
         }
         window.localStorage.setItem("muted", muted);
       }
-      muteBtn.addEventListener("click", () =>
-        emitInteraction(`toggle-sound-${muted ? "on" : "off"}`, toggleMuted)
-      );
 
       // SITTER VIEW LOGIC
       const displaySitters = (sitters) => {
@@ -311,81 +330,28 @@
 
       // QUESTION VIEW LOGIC
       const displayQuestion = (question, time) => {
-        // show question div
-        questionP.classList.toggle("hidden");
-        questionP.classList.toggle("question-animated");
-        questionP.innerHTML = question;
-
-        setTimeout(() => {
-          // hide question div
-          questionP.classList.toggle("hidden");
-          questionP.classList.toggle("question-animated");
-        }, time ? time : questionDuration);
+        questionPrompt = question
+        questionDiv.classList.remove("hidden");
+        
+        // questionP.classList.toggle("question-animated");
+        questionP.innerHTML = questionPrompt;
+        
+        journalTA.textContent = "";
+        hideJournal();
       };
       
-      // FINISHING FCN TO BE TRIGGERED BY TIMER
-      const finishSession = () => {
-        // allow screen sleep
-        noSleep.disable();
-        
-        socket.disconnect();
-        footerP.textContent = `You were sitting with ${
-          sitterCount ? sitterCount : 0
-        } others.`;
-
-        // hide all the stuff
-        sittersP.classList.toggle("hidden");
-        document.querySelector("#breathing").classList.toggle("hidden");
-
-        const completeSection = document.querySelector("#complete-section");
-        completeSection.style.display = "block";
-  
-        let datetime, duration;
-        const addToCallSetup = (datetimeP, durationP) => {
-          if (datetimeP) datetime = datetimeP;
-          if (durationP) duration = durationP;
-          
-          console.log(datetime)
-          console.log(duration)
-          
-          const eventData = {
-            "event": {
-              "@context":"https://schema.org",
-              "@type":"Event",
-              "name":"Add the title of your event",
-              "description":"A nice description does not hurt",
-              "startDate":"2022-02-21T10:13",
-              "endDate":"2022-03-24T17:57",
-              "location":"Somewhere over the rainbow"
-            },
-            "label":"Add to Calendar",
-            "options":[
-              "Apple",
-              "Google",
-              "iCal",
-              "Microsoft365",
-              "Outlook.com",
-              "Yahoo"
-            ],
-            "timeZone":"Europe/Berlin",
-            "timeZoneOffset":"+01:00",
-            "trigger":"click",
-            "iCalFileName":"Reminder-Event"
-          }
-        }
-        
-        document
-          .querySelector("#datetime-input")
-          .addEventListener("change", (e) =>
-            emitInteraction("datetime-input-change", (e) => addToCallSetup(e.target.value, null))
-          )
-        document
-          .querySelector("#duration-input")
-          .addEventListener("change", (e) =>
-            emitInteraction("duration-input-change", (e) => addToCallSetup(null, e.target.value))
-          )
-
-      };
+      // JOURNAL LOGIC
+      const displayJournal = () => {
+        journalTA.classList.remove("hidden");
+        journalBtn.classList.add("hidden");
+      }
+      const hideJournal = () => {
+        journalTA.classList.add("hidden");
+        journalBtn.classList.remove("hidden");
+      }
+      const updateJournal = (question, entry) => {
+        journal[question] = entry;
+      }
       
       // TIMER LOGIC
       // set-up timer for form from URL params
@@ -395,7 +361,7 @@
         timer.start({
           countdown: true,
           startValues:
-            duration === "dev" ? { seconds: 1 } : { minutes, seconds },
+            duration === "dev" ? { seconds: 3 } : { minutes, seconds },
         });
 
         document.querySelector("#timer").textContent = timer
@@ -431,6 +397,139 @@
         clearTimer()
         startTimer({ minutes: newMins, seconds })
       }
+      
+      // FINISHING FCN TO BE TRIGGERED BY TIMER
+      const finishSession = () => {
+        // allow screen sleep
+        noSleep.disable();
+        
+        questionDiv.classList.add("hidden")
+        
+        socket.disconnect();
+        footerP.textContent = `You were sitting with ${
+          sitterCount ? sitterCount : 0
+        } others.`;
+
+        // hide sitters & breathing
+        sittersP.classList.toggle("hidden");
+        document.querySelector("#breathing").classList.toggle("hidden");
+        
+        // set initial calendar values & display complete section
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.querySelector("#datetime-input").value = tomorrow.toISOString().slice(0, 16);
+        
+        let duration = 10;
+        document.querySelector("#duration-input").value = duration;
+        
+        // list journal entries 
+        const entries = Object.entries(journal);
+        if (entries[0]) {
+          const reveal = document.createElement("p");
+          reveal.classList.add("text-xl");
+          reveal.textContent = "Journal entries:";
+          journalReveal.appendChild(reveal);
+          
+          entries.forEach(entry => {
+            if (entry) {
+              const heading = document.createElement("p");
+              heading.classList.add("text-lg");
+              heading.classList.add("text-left");
+              heading.textContent = entry[0];
+              journalReveal.appendChild(heading);
+
+              const paragraph = document.createElement("p");
+              paragraph.classList.add("text-sm");
+              paragraph.classList.add("text-left");
+              paragraph.textContent = entry[1];
+              journalReveal.appendChild(paragraph); 
+            }
+          })
+          
+          const spacer = document.createElement("div");
+          spacer.classList.add("text-lg");
+          spacer.innerHTML = "&nbsp;";
+          journalReveal.appendChild(spacer); 
+          
+          journalReveal.classList.remove("hidden");
+        }
+        
+        completeSection.style.display = "block";
+        
+        // initial values for addToCal data
+        let startDate = tomorrow; 
+        let endDate = new Date(tomorrow); endDate.setMinutes(endDate.getMinutes() + duration); 
+        const addToCalSetup = (datetimeP, durationP) => {
+          if (datetimeP) startDate = new Date(datetimeP);
+          
+          if (startDate && durationP) {
+            duration = durationP;
+            endDate = new Date(startDate);
+            endDate.setMinutes(startDate.getMinutes() + Number(durationP));
+          }
+          
+          const eventData = {
+            "event": {
+              "@context":"https://schema.org",
+              "@type":"Event",
+              "name":"Just Sitting",
+              "description":"Taking some time to just sit",
+              "startDate": startDate.toISOString().slice(0,16),
+              "endDate": endDate.toISOString().slice(0,16),
+              "location":`https://just-sitting.io/${duration}`
+            },
+            "label":"Add to Calendar",
+            "options":[
+              "Apple",
+              "Google",
+              // "iCal",
+              // "Microsoft365",
+              "Outlook.com",
+              // "Yahoo"
+            ],
+            "timeZone":Intl.DateTimeFormat().resolvedOptions().timeZone,
+            "trigger":"click",
+            "iCalFileName":"just-sitting-cal-event"
+          }
+          
+          const div = document.createElement("div");
+          div.className = "atcb"; 
+          const script = document.createElement("script");
+          script.type = "application/ld+json";
+          script.innerHTML = JSON.stringify(eventData)
+          div.appendChild(script);
+          
+          const atcDiv = document.querySelector("#add-to-cal-div");
+          atcDiv.replaceChildren(div);
+          atcb_init();
+        }
+        addToCalSetup();
+        
+        document
+          .querySelector("#datetime-input")
+          .addEventListener("change", (e) =>
+            emitInteraction("datetime-input-change", () => addToCalSetup(e.target.value, null))
+          )
+        document
+          .querySelector("#duration-input")
+          .addEventListener("change", (e) =>
+            emitInteraction("duration-input-change", () => addToCalSetup(null, e.target.value))
+          )
+
+      };
+      
+      // ADD all functions as event listeners
+      journalBtn.addEventListener("click", () =>
+        emitInteraction(`open-journal`, displayJournal)
+      );
+      journalTA.addEventListener("input", (e) => {
+        updateJournal(questionPrompt, e.target.value);
+        emitInteraction(`journal-input-change`, () => {});
+      });
+      muteBtn.addEventListener("click", () =>
+        emitInteraction(`toggle-sound-${muted ? "on" : "off"}`, toggleMuted)
+      );
+      questionP.addEventListener("click", () => questionDiv.classList.add("hidden"));
       document
         .querySelector("#timer-button")
         .addEventListener("click", () => 
@@ -440,26 +539,18 @@
       document
         .querySelector("#one-min-button")
         .addEventListener("click", () =>
-          emitInteraction("1-min-extension", () => extendSession(1))
+          emitInteraction("1-min-extension", () => extendSession(3))
         );
       document
         .querySelector("#two-min-button")
         .addEventListener("click", () =>
-          emitInteraction("2-min-extension", () => extendSession(2))
+          emitInteraction("2-min-extension", () => extendSession(5))
         );
       document
         .querySelector("#three-min-button")
         .addEventListener("click", () =>
-          emitInteraction("3-min-extension", () => extendSession(3))
+          emitInteraction("3-min-extension", () => extendSession(10))
         );
-
-      // MENU CONTROLS
-      function toggleMenu() {
-        const menu = document.querySelector("#menu");
-        return menu.style.display === "block"
-          ? (menu.style.display = "none")
-          : (menu.style.display = "block");
-      }
       document
         .querySelector("#menu-button")
         .addEventListener("click", () =>
